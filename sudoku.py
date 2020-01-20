@@ -1,5 +1,3 @@
-import heapq
-
 popcount = [[]] * 2 ** 9
 for i in range(len(popcount)):
     popcount[i] = [index for index, a in enumerate(format(i, '09b')[::-1],start=1) if a == '0']
@@ -35,30 +33,25 @@ def prepare(puzzle):
                 setMask(mask, i, j, value)
             else:
                 queue.append((i,j))
-    queue = [(rank(mask, i, j), i, j) for i,j in queue]
-    heapq.heapify(queue)
     return (mask, queue)
 
 def process(queue, mask, puzzle):
     if len(queue)==0:
         return [puzzle]
     result = []
-    newQueue = queue[:]
-    _, i, j = heapq.heappop(newQueue)
+    i, j = min(queue,key=lambda p: rank(mask, p[0], p[1]))
+    newQueue = queue.copy()
+    newQueue.remove((i,j))
     a = available(mask, i, j)
     for value in a:
         newMask = [x[:] for x in mask]
         newPuzzle = [x[:] for x in puzzle]
         newPuzzle[i][j] = value
         setMask(newMask, i, j, value)
-        newQueue = [(rank(mask, i, j), i, j) for _, i, j in newQueue]
-        if len(newQueue)==0:
-            return [newPuzzle]
-        heapq.heapify(newQueue)
-        if newQueue[0][0] > 0:
-            result += process(newQueue, newMask, newPuzzle)
-            if len(result) > 1:
-                return result
+        
+        result += process(newQueue, newMask, newPuzzle)
+        if len(result) > 1:
+            return result
     return result
 
 def sudoku_solver(puzzle):
@@ -69,3 +62,15 @@ def sudoku_solver(puzzle):
     result = process(queue, mask, puzzle)
     assert(len(result)==1)
     return result[0]
+
+if __name__ == "__main__":
+    puzzle = [[0, 0, 6, 0, 0, 7, 0, 9, 0],
+        [0, 0, 1, 0, 4, 0, 6, 0, 0],
+        [0, 0, 0, 8, 0, 6, 0, 5, 0],
+        [0, 0, 0, 0, 0, 0, 0, 4, 0],
+        [0, 6, 4, 0, 8, 0, 3, 7, 0],
+        [0, 3, 0, 0, 0, 0, 0, 0, 0],
+        [0, 5, 0, 3, 0, 4, 0, 0, 0],
+        [0, 0, 8, 0, 1, 0, 4, 0, 0],
+        [0, 1, 0, 5, 0, 0, 2, 0, 0]]
+    print(sudoku_solver(puzzle))
